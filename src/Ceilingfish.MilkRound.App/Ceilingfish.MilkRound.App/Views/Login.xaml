@@ -6,10 +6,14 @@
              mc:Ignorable="d"
              x:Class="Ceilingfish.MilkRound.Mobile.Core.Login">
     <ContentPage.Content>
-        <StackLayout>
-            <Label Text="Welcome to Xamarin.Forms!"
-                VerticalOptions="CenterAndExpand" 
-                HorizontalOptions="CenterAndExpand" />
-        </StackLayout>
+        <FlexLayout Direction="Column"
+                AlignItems="Center"
+                JustifyContent="SpaceEvenly">
+
+            <Entry Placeholder="Username"  Text="{Binding Username}" />
+            <Entry Placeholder="Password" IsPassword="True" Text="{Binding Password}" />
+
+            <Button Text="Login" />
+        </FlexLayout>
     </ContentPage.Content>
 </ContentPage>
