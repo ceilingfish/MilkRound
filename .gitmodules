@@ -1,0 +1,3 @@
+[submodule "specs/Apis"]
+	path = specs/Apis
+	url = https://ceilingfish@app.apigit.com/ceilingfish/ApiSpecifications.git
