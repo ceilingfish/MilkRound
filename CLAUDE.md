@@ -45,7 +45,7 @@ We should also have `Service.FunctionalTests`. This library should "black box" t
 
 We want to use React Native for the front end. It should be based on a modern version and make use of expo.
 
-The mobile application will live in `src/MobileUi` and support both customer and driver roles through role-based navigation.
+The mobile application will live in `src/MobileUi` and support both customer and supplier roles through role-based navigation.
 
 ### Project Structure
 
@@ -63,7 +63,7 @@ src/
     │   ├── features/         # Feature modules
     │   │   ├── shared/       # Shared features for both roles
     │   │   ├── customer/     # Customer-specific features
-    │   │   └── driver/       # Driver-specific features
+    │   │   └── supplier/     # Supplier-specific features
     │   ├── screens/          # Screen components
     │   ├── navigation/       # Navigation configuration
     │   ├── hooks/            # Custom React hooks
@@ -258,7 +258,7 @@ d:\Code\MilkRound/
 
 ### Role-Based Architecture
 
-The mobile app supports both customer and driver roles in a single application:
+The mobile app supports both customer and supplier roles in a single application:
 
 **Role Management:**
 - Store user role in Zustand auth store
@@ -270,14 +270,14 @@ The mobile app supports both customer and driver roles in a single application:
 navigation/
 ├── AuthStack.tsx         # Login, register (no role required)
 ├── CustomerStack.tsx     # Customer-specific screens
-├── DriverStack.tsx       # Driver-specific screens
+├── SupplierStack.tsx       # Supplier-specific screens
 └── RootNavigator.tsx     # Routes based on authenticated user's role
 ```
 
 **Feature Organization by Role:**
 - Shared features: `features/shared/`
 - Customer features: `features/customer/`
-- Driver features: `features/driver/`
+- Supplier features: `features/supplier/`
 
 ### Build and Deployment
 
