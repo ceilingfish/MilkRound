@@ -22,12 +22,16 @@ If you are designing an API you should tend towards CQRS patterns. You should ca
 The backend should be written in C# 10. It should make use of the latest language features, including:
 
 * OpenAPI automatic generation of an API spec
-* It should make use of "hexagonal architecture". There should be a seperate csproj for each of the following:
-** Application - This should contain the business logic that ties ports to their respective adapters. It should contain a series of request & command la
-** Abstractions - This is a library that should contain the interfaces implemented in Adapters, and used in Application
-** DataContracts - This should contain the domain entities that are used by the Client and the API controllers
-** Api.Service - This is the entry point executable that should run the asp.net core API. The docker file should be in this project, and the ASP.Net Controllers. The controllers should call command and query handler interfaces defined in the
-** Adapters - These are the abstractions that bridge between the business logic in Application and the underlying implementation. e.g. cosmos DB. If you need to create a library for this please use the assembly name `Data.XXX` where XXX is a representative name of an abstraction.
+* All default namespaces should be `MilkRound` followed by the assembly name.
+* It should make use of "hexagonal architecture" and ports and adapters.
+
+The solution file (and all these assemblies) should be in the `src` folder. The solution file should be `MilkRound.sln` and contain the following projects:
+* Application - This should contain the business logic that ties ports to their respective adapters. It should contain a series of command & query handlers. One for each query and command.
+* Abstractions - This is a library that should contain the interfaces implemented in Adapters, and used in Application
+* DataContracts - This should contain the domain entities that are used by the Client and the API controllers
+* Api.Service - This is the entry point executable that should run the asp.net core API. The docker file should be in this project, and the ASP.Net Controllers. The controllers should call command and query handler interfaces defined in the Application library. It should use the domain objects from the DataContracts library
+* Api.Client - This should contain a strongly type .net client that is auto-generated from the OpenAPI spec. It should generate this using the Refit library
+* Adapters - These are the abstractions that bridge between the business logic in Application and the underlying implementation. e.g. cosmos DB. If you need to create a library for this please use the assembly name `Data.XXX` where XXX is a representative name of an abstraction.
 
 ### Tests
 
@@ -41,7 +45,7 @@ We should also have `Service.FunctionalTests`. This library should "black box" t
 
 We want to use React Native for the front end. It should be based on a modern version and make use of expo.
 
-It should be possible to build the front end with a single command
+It should be possible to build the front end with a single command, using expo.
 
 # Hard Rules
 
