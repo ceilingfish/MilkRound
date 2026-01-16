@@ -6,29 +6,71 @@ The APIs are intended to be the ones that will be called by users who are making
 
 ## Commands
 
-### Signup API
+All of these commands should be scoped to `write:self`, unless otherwise specifically stated.
 
-We need a section of the application that allows a user to register. The API should take the unique code supplied by the supplier and return:
-* a 201 if authorized
-* a 404 if the code is not known
+### Add item to a specific delivery
 
-If the signup is created, then the response returns a redirect to Auth0 for customer signup
+This should allow a customer to add an item to a specific instance of a delivery
 
-### Authentication Callback
+* a product ID
+* An array (of at least one) delivery schedule IDs
+* A quantity
 
-This is the callback that handles the response from Auth0. If the user is authenticated, then it responds with a response that sets the default ASP.Net authentication cookies. If not, it returns a 401.
+It should return either a confirmation that the order was modified (with an ID)
 
-### Authorized API
+Verb: POST
+Path: `/PlannedDeliveries/{id}/Items`
 
-This API should be used to check if the customer has a valid session. If they do, it returns a 200, otherwise it returns a 401
+### Add item to a delivery schedule
+
+This should allow a customer to add an item to a delivery. The should have to supply:
+
+* a product ID
+* An array (of at least one) delivery schedule IDs
+* A quantity
+
+It should return either a confirmation that the order was modified (with an ID)
+
+Verb: POST
+Path: `/DeliverySchedules/{id}/Items`
+
+### Remove item from a specific delivery
+
+This should allow a customer to remove an item from a specific delivery. They should have to supply:
+
+Verb: DELETE
+Path: `/PlannedDeliveries/{id}/Items/{id}`
+
+### Remove item from a delivery schedule
+
+This should allow a customer to remove an item from a delivery schedule, so it isn't delivered on that day again at all.
+
+Verb: DELETE
+Path: `/DeliverySchedules/{id}/Items/{id}`
+
+### Skip a planned delivery
+
+This should cancel the for a specific day, and mark it as skipped. Should have to pass the ID of the planned delivery to cancel it.
+
+Verb POST
+Path `/PlannedDeliveries/{id}/Cancel`
+
+## Cancel a scheduled delivery
+
+This should cancel a delivery for a customer on a specific schedule ID
+
+Verb POST
+Path `/DeliverySchedules/{id}/Cancel`
 
 ## Queries
 
+All of these queries should be scoped to `read:self` unless otherwise stated.
+
 ### Get supplier delivery schedule
 
-Gets the supplier delivery slots that are available to the customer. This should be scoped to `read:self`, and available at the path `/Supplier/{id}/DeliverySchedule`. It should return a list of slots that are available from the customers current supplier, how frequently they occur, and on what day. It should also include information about cutoff times.
+Gets the supplier delivery schedules that are available to the customer. This should be scoped to `read:self`, and available at the path `/Supplier/{id}/DeliverySchedule`. It should return a list of schedules that are available from the customers current supplier, how frequently they occur, and on what day. It should also include information about cutoff times.
 
-## Get supplier info
+### Get supplier info
 
 At `/Supplier/{id}` this should return the basic contact information for the supplier including:
 * Business name
@@ -37,17 +79,19 @@ At `/Supplier/{id}` this should return the basic contact information for the sup
 
 The contact details are not mandatory.
 
-Scope should be `read:self`
+### Get next delivery
 
-# Get next delivery
-
-This API should return the next delivery for the customer. It should be at `/Deliveries/Next` and return a delivery model.
+This API should return the next delivery for the customer. It should be at `/PlannedDeliveries/Next` and return a delivery model.
 
 If the customer has no deliveries scheduled, then this should return 404
 
-Scope should be `read:self`
+### Get planned deliveries
 
-# Get supplier items
+This API should return the deliveries that are planned for a customer. It should return a list of delivery models.
+
+Path `/Supplier/{id}/PlannedDeliveries`
+
+### Get supplier items
 
 Path `/Supplier/{id}/Items`. It should take the following parameters:
 
@@ -56,5 +100,3 @@ Path `/Supplier/{id}/Items`. It should take the following parameters:
 
 The response should be a list of Item models, but extended with the following properties:
 * Maximum Quantity - The largest number of items that the supplier can deliver
-
-Scope should be `read:self`
