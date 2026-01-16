@@ -15,6 +15,8 @@ If you are designing an API you should tend towards CQRS patterns. You should ca
 * Commands - These change state. If it isn't a GET verb, it's very likely a command
 * Queries - These fetch data from a data store and present it.
 
+API paths should always use PascalCase for all segments (e.g., `/Auth/Signup`, `/Supplier/{id}/DeliverySchedule`).
+
 # Tech choices
 
 ## Backend 
