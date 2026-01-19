@@ -1,0 +1,12 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Add package versions here as the solution grows -->
+    <!-- Example: -->
+    <!-- <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" /> -->
+  </ItemGroup>
+</Project>
