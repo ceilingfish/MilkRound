@@ -34,6 +34,13 @@ The solution file (and all these assemblies) should be in the `src` folder. The 
 * Api.Service - This is the entry point executable that should run the asp.net core API. The docker file should be in this project, and the ASP.Net Controllers. The controllers should call command and query handler interfaces defined in the Application library. It should use the domain objects from the DataContracts library
 * Api.Client - This should contain a strongly type .net client that is auto-generated from the OpenAPI spec. It should generate this using the Refit library
 * Adapters - These are the abstractions that bridge between the business logic in Application and the underlying implementation. e.g. cosmos DB. If you need to create a library for this please use the assembly name `Data.XXX` where XXX is a representative name of an abstraction.
+* Data.PostgresSQL - This should be a sqlproj file that contains all of the tables, stored procedures and indices. It should also contain a database client that implements an interface for data access defined in Abstractions
+
+## Abstractions
+
+### Data Reader & Writer
+
+The interface for persistence should separate out writers (which should be used to persist data written by commands) and readers which should be used to read data requested by queries
 
 ### Tests
 
@@ -345,7 +352,7 @@ infrastructure/
     ├── *.tfvars
 ```
 
-All of this should be managed by a terragrunt hcl file in the root of the repository.
+All of this should be managed by a terragrunt hcl file in the root of the repository. We should lean towards opentofu
 
 # Hard Rules
 
