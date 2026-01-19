@@ -1,9 +1,12 @@
 <Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+  </Configurations>
   <Folder Name="/src/">
     <Project Path="DataContracts\DataContracts.csproj" />
     <Project Path="Abstractions\Abstractions.csproj" />
     <Project Path="Application\Application.csproj" />
-    <Project Path="Api.Service\Api.Service.csproj" />
+    <Project Path="Api.Service\Api.Service.csproj" DefaultStartup="true" />
     <Project Path="Api.Client\Api.Client.csproj" />
     <Project Path="Data.PostgreSql\Data.PostgreSql.csproj" />
   </Folder>
