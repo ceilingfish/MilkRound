@@ -1,4 +1,4 @@
-namespace MilkRound.Application.Queries;
+namespace MilkRound.Application.Models.Queries;
 
 /// <summary>
 /// Query to get the next scheduled delivery for a customer.

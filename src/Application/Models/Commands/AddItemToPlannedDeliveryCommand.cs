@@ -1,4 +1,4 @@
-namespace MilkRound.Application.Commands;
+namespace MilkRound.Application.Models.Commands;
 
 /// <summary>
 /// Command to add an item to a specific planned delivery.

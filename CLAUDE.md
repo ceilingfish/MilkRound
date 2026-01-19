@@ -28,7 +28,7 @@ The backend should be written in C# 10. It should make use of the latest languag
 * It should make use of "hexagonal architecture" and ports and adapters.
 
 The solution file (and all these assemblies) should be in the `src` folder. The solution file should be `MilkRound.sln` and contain the following projects:
-* Application - This should contain the business logic that ties ports to their respective adapters. It should contain a series of command & query handlers. One for each query and command.
+* Application - This should contain the business logic that ties ports to their respective adapters. It should contain a series of command & query handlers. One for each query and command. There should be a models folder inside here that contains the command and query model objects, and another folder that contains the handlers.
 * Abstractions - This is a library that should contain the interfaces implemented in Adapters, and used in Application
 * DataContracts - This should contain the domain entities that are used by the Client and the API controllers
 * Api.Service - This is the entry point executable that should run the asp.net core API. The docker file should be in this project, and the ASP.Net Controllers. The controllers should call command and query handler interfaces defined in the Application library. It should use the domain objects from the DataContracts library
