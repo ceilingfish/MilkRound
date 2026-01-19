@@ -333,6 +333,20 @@ Enforce code quality through tooling:
 
 For detailed research and expanded best practices, see [research/react-native-codebase-structure-best-practices.md](research/react-native-codebase-structure-best-practices.md).
 
+## Infrastructure
+
+This should be in the `infrastructure` folder, as discrete terraform modules. The structure should look like
+
+```
+infrastructure/
+├── components/
+|   ├── [component name]/
+├── envs/
+    ├── *.tfvars
+```
+
+All of this should be managed by a terragrunt hcl file in the root of the repository.
+
 # Hard Rules
 
 Below are some hard rules that you should always follow:
