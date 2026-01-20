@@ -1,0 +1,18 @@
+[tools]
+dotnet = "10.0.102"
+opentofu = "1.11.3"
+terragrunt = "0.97.2"
+
+[tasks.build_api]
+description = "Build the API Service"
+run = "dotnet build src/MilkRound.slnx"
+
+[tasks.test_api]
+description = "Run API Service Tests"
+run = "dotnet test src/MilkRound.slnx--no-build"
+depends = ["build_api"]
+
+[tasks.run_api]
+description = "Run the API Service"
+run = "dotnet run --project src/Api.Service/Api.Service.csproj --no-restore --no-build"
+depends = ["build_api"]
