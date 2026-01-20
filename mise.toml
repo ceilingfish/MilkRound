@@ -2,6 +2,7 @@
 dotnet = "10.0.102"
 opentofu = "1.11.3"
 terragrunt = "0.97.2"
+atlas = "1.0.0"
 
 [tasks.build_api]
 description = "Build the API Service"
