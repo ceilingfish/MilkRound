@@ -35,6 +35,7 @@ The solution file (and all these assemblies) should be in the `src` folder. The 
 * Api.Client - This should contain a strongly type .net client that is auto-generated from the OpenAPI spec. It should generate this using the Refit library
 * Adapters - These are the abstractions that bridge between the business logic in Application and the underlying implementation. e.g. cosmos DB. If you need to create a library for this please use the assembly name `Data.XXX` where XXX is a representative name of an abstraction.
 * Data.PostgresSQL - This should be a sqlproj file that contains all of the tables, stored procedures and indices. It should also contain a database client that implements an interface for data access defined in Abstractions
+* Schema - Contains the schema to create the postgres database
 
 ## Abstractions
 
