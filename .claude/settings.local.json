@@ -1,7 +1,14 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dotnet:*)"
+      "Bash(dotnet:*)",
+      "Bash(docker ps:*)",
+      "Bash(powershell:*)",
+      "Bash(cmd:*)",
+      "Bash(cmd /c docker ps)"
+    ],
+    "additionalDirectories": [
+      "d:\\Code\\MilkRound"
     ]
   }
 }
