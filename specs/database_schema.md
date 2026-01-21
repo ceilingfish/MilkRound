@@ -19,7 +19,9 @@ A table that contains all the customers including:
 
 * a unique ID to identify the customer
 * Customer name
-* Their full postal address
+* Street address
+* Additional address fields
+* Postal code
 * The latitude & longitude
 
 ### Suppliers
