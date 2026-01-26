@@ -4,6 +4,10 @@ opentofu = "1.11.3"
 terragrunt = "0.97.2"
 atlas = "1.0.0"
 
+[vars]
+DATABASE_URL = "postgresql://user:password@localhost:5432/milkround"
+DATABASE_DEV_URL = "postgresql://user:password@localhost:5432/milkround_dev"
+
 [tasks.build_api]
 description = "Build the API Service"
 run = "dotnet build src/MilkRound.slnx"
@@ -17,3 +21,7 @@ depends = ["build_api"]
 description = "Run the API Service"
 run = "dotnet run --project src/Api.Service/Api.Service.csproj --no-restore --no-build"
 depends = ["build_api"]
+
+[tasks.apply_schema]
+description = "Apply database schema migrations"
+run = "atlas schema apply --to src/Schema --url $DATABASE_URL --dev-url $DATABASE_DEV_URL"

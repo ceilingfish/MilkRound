@@ -4,8 +4,7 @@
       "Bash(dotnet:*)",
       "Bash(docker ps:*)",
       "Bash(powershell:*)",
-      "Bash(cmd:*)",
-      "Bash(cmd /c docker ps)"
+      "Bash(cmd:*)"
     ],
     "additionalDirectories": [
       "d:\\Code\\MilkRound"

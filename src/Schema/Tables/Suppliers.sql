@@ -1,0 +1,10 @@
+-- Suppliers table
+CREATE TABLE Suppliers (
+    Id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    Name VARCHAR(255) NOT NULL,
+    Email VARCHAR(255),
+    CreatedAt TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CreatedBy VARCHAR(255) NOT NULL,
+    ModifiedAt TIMESTAMPTZ,
+    ModifiedBy VARCHAR(255)
+);
