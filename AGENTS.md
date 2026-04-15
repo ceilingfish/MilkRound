@@ -392,7 +392,7 @@ You should use mise for two things:
 
 You can also use it when you want to define build tasks, in a similar manner to a NPM package.json task. You can define tasks in mise.toml using [tasks."task:name"]. You can reference environmental variables, by putting this these in mise.ENV.toml.
 
-You can use those in using $VARIABLE syntax. If you define an environment variable, you should define a default in mise.toml
+You can use those in using $VARIABLE syntax. If you define an environment variable, you should define a default in mise.toml.
 
 # Hard Rules
 
