@@ -8,20 +8,20 @@ atlas = "1.0.0"
 DATABASE_URL = "postgresql://user:password@localhost:5432/milkround"
 DATABASE_DEV_URL = "postgresql://user:password@localhost:5432/milkround_dev"
 
-[tasks.build_api]
+[tasks."api:build"]
 description = "Build the API Service"
 run = "dotnet build src/MilkRound.slnx"
 
-[tasks.test_api]
+[tasks.test]
 description = "Run API Service Tests"
 run = "dotnet test src/MilkRound.slnx--no-build"
-depends = ["build_api"]
+depends = ["api:build"]
 
-[tasks.run_api]
+[tasks."api:run"]
 description = "Run the API Service"
 run = "dotnet run --project src/Api.Service/Api.Service.csproj --no-restore --no-build"
-depends = ["build_api"]
+depends = ["api:build"]
 
-[tasks.apply_schema]
+[tasks."db:migrate"]
 description = "Apply database schema migrations"
 run = "atlas schema apply --to src/Schema --url $DATABASE_URL --dev-url $DATABASE_DEV_URL"
