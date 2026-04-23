@@ -26,3 +26,8 @@ depends = ["api:build"]
 [tasks."db:migrate"]
 description = "Apply database schema migrations"
 run = "atlas schema apply --to src/Schema --url $DATABASE_URL --dev-url $DATABASE_DEV_URL"
+
+[tasks."mobile:start"]
+description = "Run the Mobile UI (Expo dev server)"
+dir = "src/MobileUi"
+run = "pnpm start"
