@@ -43,8 +43,6 @@ export default function LoginScreen() {
       const res = await validateSupplierCode({ code: trimmed });
       setSupplier(trimmed, res.supplierId, res.businessName);
       router.replace('/(customer)/onboarding/address');
-    } catch {
-      setError("That code wasn't recognised. Please check and try again.");
     } finally {
       setLoading(false);
     }
