@@ -75,6 +75,7 @@ Requests/
 Responses/
  DeliveryScheduleResponse.cs
  ErrorResponse.cs
+ FindSupplierByCodeResponse.cs
  ModifyDeliveryResponse.cs
  PlannedDeliveriesResponse.cs
  SignupResponse.cs

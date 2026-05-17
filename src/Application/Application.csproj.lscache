@@ -54,9 +54,12 @@ TemporaryDependencyNodeTargetIdentifier=net10.0
 /warnaserror+:NU1605,SYSLIB0011
 
 [sourceFiles]
+Handlers/Queries/FindSupplierByCodeQueryHandler.cs
 Models/
  Commands/AddItemToPlannedDeliveryCommand.cs
- Queries/GetNextDeliveryQuery.cs
+ Queries/
+  FindSupplierByCodeQuery.cs
+  GetNextDeliveryQuery.cs
 obj/Debug/net10.0/
  .NETCoreApp,Version=v10.0.AssemblyAttributes.cs
  Application.AssemblyInfo.cs
