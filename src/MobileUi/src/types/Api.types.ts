@@ -58,6 +58,7 @@ export interface DeliverySlot {
   frequency: DeliveryFrequency;
   cutoffTime: string;
   cutoffDaysBefore?: number;
+  available?: boolean;
 }
 
 /** Basic contact information for a supplier. */
@@ -69,3 +70,14 @@ export interface SupplierInfo {
 }
 
 export type UserRole = 'customer' | 'supplier';
+
+/** Delivery address. */
+export interface CustomerAddress {
+  flat?: string;
+  line1: string;
+  line2: string;
+  postcode: string;
+  notes?: string;
+  latitude?: number;
+  longitude?: number;
+}

@@ -4,7 +4,13 @@ info:
   description: |
     APIs for customers to manage orders and deliveries through the MilkRound application.
     These endpoints are intended for users who are making orders and managing their deliveries.
-  version: 1.0.0
+
+    ## Authentication
+
+    The onboarding flow is unauthenticated. A `customerId` (UUID) is issued after address
+    confirmation via `POST /Customers` and must be passed as the `X-Customer-Id` header on
+    all subsequent requests.
+  version: 2.0.0
   contact:
     name: MilkRound Support
 
@@ -15,8 +21,8 @@ servers:
     description: Staging server
 
 tags:
-  - name: Authentication
-    description: User authentication and session management
+  - name: Onboarding
+    description: Unauthenticated onboarding flow — validate supplier code, check service area, create customer and initial subscription
   - name: Suppliers
     description: Supplier information and schedules
   - name: PlannedDeliveries
@@ -25,129 +31,189 @@ tags:
     description: Management of recurring delivery schedules
 
 paths:
-  /Auth/Signup:
+
+  # ── Onboarding ──────────────────────────────────────────────────────────────
+
+  /Suppliers/ValidateCode:
     post:
       tags:
-        - Authentication
-      summary: Register a new customer
+        - Onboarding
+      summary: Validate a supplier invite code
       description: |
-        Initiates the signup process using a unique code supplied by the supplier.
-        If the code is valid, returns a redirect to Auth0 for customer signup.
-      operationId: signup
+        Validates the 6-character code from the customer's welcome card.
+        Returns basic supplier information so the app can personalise the
+        onboarding journey. No customer record is created at this stage.
+      operationId: validateSupplierCode
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SignupRequest'
+              $ref: '#/components/schemas/ValidateCodeRequest'
       responses:
-        '201':
-          description: Signup initiated - redirect to Auth0
-          headers:
-            Location:
-              description: Auth0 signup URL
-              schema:
-                type: string
-                format: uri
+        '200':
+          description: Code is valid
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SignupResponse'
+                $ref: '#/components/schemas/ValidateCodeResponse'
+        '404':
+          description: Code not recognised or expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /Suppliers/{id}/ServiceArea:
+    get:
+      tags:
+        - Onboarding
+      summary: Check whether a postcode is within the supplier's delivery area
+      description: |
+        Returns whether the given postcode falls on the supplier's route and,
+        if so, the expected delivery window (e.g. "Mon–Sat before 7am").
+        Postcode validation and geocoding should be performed client-side via
+        postcodes.io before calling this endpoint.
+      operationId: checkServiceArea
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: postcode
+          in: query
+          required: true
+          description: UK postcode (spaces optional)
+          schema:
+            type: string
+            example: BS8 2AB
+      responses:
+        '200':
+          description: Service area check result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceAreaResponse'
+        '400':
+          description: Invalid postcode format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Supplier not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /Customers:
+    post:
+      tags:
+        - Onboarding
+      summary: Create a new customer
+      description: |
+        Creates a customer record after the address has been confirmed as
+        in-range. The supplier code is re-asserted to prevent orphaned records.
+        Returns a `customerId` that the client persists in secure storage and
+        sends as `X-Customer-Id` on all subsequent requests.
+      operationId: createCustomer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCustomerRequest'
+      responses:
+        '201':
+          description: Customer created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateCustomerResponse'
         '404':
           description: Supplier code not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: A customer with this address already exists for this supplier
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
-  /Auth/Callback:
-    get:
+  /Customers/{id}/Subscription:
+    post:
       tags:
-        - Authentication
-      summary: Authentication callback from Auth0
+        - Onboarding
+      summary: Create initial subscription
       description: |
-        Handles the callback response from Auth0. If authentication is successful,
-        sets the ASP.NET authentication cookies.
-      operationId: authCallback
+        Batch-creates delivery schedules and initial item selections at the
+        end of the onboarding flow. One `DeliverySchedule` is created per
+        selected day. `defaultBasket` applies to all days; `dayOverrides`
+        replaces the default basket for specific days (the "split a day"
+        feature from the product picker).
+      operationId: createSubscription
       parameters:
-        - name: code
-          in: query
+        - name: id
+          in: path
           required: true
-          description: Authorization code from Auth0
+          description: Customer ID returned by POST /Customers
           schema:
             type: string
-        - name: state
-          in: query
-          required: false
-          description: State parameter for CSRF protection
-          schema:
-            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSubscriptionRequest'
       responses:
-        '200':
-          description: Authentication successful - cookies set
-          headers:
-            Set-Cookie:
-              description: ASP.NET authentication cookies
+        '201':
+          description: Subscription created
+          content:
+            application/json:
               schema:
-                type: string
-        '401':
-          description: Authentication failed
+                $ref: '#/components/schemas/CreateSubscriptionResponse'
+        '400':
+          description: Invalid request (no days selected, unknown product IDs)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Customer not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /Auth/Authorized:
-    get:
-      tags:
-        - Authentication
-      summary: Check if customer has a valid session
-      description: Validates whether the customer has an active authenticated session.
-      operationId: checkAuthorized
-      security:
-        - cookieAuth: []
-      responses:
-        '200':
-          description: Customer has a valid session
-        '401':
-          description: Customer does not have a valid session
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+  # ── Suppliers ────────────────────────────────────────────────────────────────
 
   /Supplier/{id}:
     get:
       tags:
         - Suppliers
       summary: Get supplier information
-      description: Returns basic contact information for the specified supplier.
       operationId: getSupplierInfo
-      security:
-        - cookieAuth: []
-        - oauth2:
-            - read:self
       parameters:
         - name: id
           in: path
           required: true
-          description: The unique identifier of the supplier
           schema:
             type: string
             format: uuid
       responses:
         '200':
-          description: Supplier information retrieved successfully
+          description: Supplier information
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/SupplierInfo'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Supplier not found
           content:
@@ -160,35 +226,22 @@ paths:
       tags:
         - Suppliers
       summary: Get supplier delivery schedule
-      description: |
-        Returns the delivery slots available to the customer from their current supplier,
-        including frequency, day of delivery, and cutoff times.
+      description: Returns the delivery slots available from this supplier including frequency, day and cutoff times.
       operationId: getSupplierDeliverySchedule
-      security:
-        - cookieAuth: []
-        - oauth2:
-            - read:self
       parameters:
         - name: id
           in: path
           required: true
-          description: The unique identifier of the supplier
           schema:
             type: string
             format: uuid
       responses:
         '200':
-          description: Delivery schedule retrieved successfully
+          description: Delivery schedule
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/DeliveryScheduleResponse'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Supplier not found
           content:
@@ -201,48 +254,33 @@ paths:
       tags:
         - Suppliers
       summary: Get supplier items
-      description: |
-        Returns the list of items available from the specified supplier.
-        Can be filtered by delivery schedule and searched by free text query.
+      description: Returns the items available from this supplier. Optionally filter by delivery schedule or free-text query.
       operationId: getSupplierItems
-      security:
-        - cookieAuth: []
-        - oauth2:
-            - read:self
       parameters:
         - name: id
           in: path
           required: true
-          description: The unique identifier of the supplier
           schema:
             type: string
             format: uuid
         - name: deliveryScheduleId
           in: query
           required: false
-          description: Filter items to only those available for a specific delivery schedule
           schema:
             type: string
             format: uuid
         - name: query
           in: query
           required: false
-          description: Free text search query to match against item names
           schema:
             type: string
       responses:
         '200':
-          description: Items retrieved successfully
+          description: Items
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/SupplierItemsResponse'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Supplier not found
           content:
@@ -255,33 +293,21 @@ paths:
       tags:
         - PlannedDeliveries
       summary: Get planned deliveries for supplier
-      description: Returns the list of planned deliveries for the customer from the specified supplier.
       operationId: getPlannedDeliveries
-      security:
-        - cookieAuth: []
-        - oauth2:
-            - read:self
       parameters:
         - name: id
           in: path
           required: true
-          description: The unique identifier of the supplier
           schema:
             type: string
             format: uuid
       responses:
         '200':
-          description: Planned deliveries retrieved successfully
+          description: Planned deliveries
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlannedDeliveriesResponse'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Supplier not found
           content:
@@ -289,30 +315,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  # ── Planned Deliveries ───────────────────────────────────────────────────────
+
   /PlannedDeliveries/Next:
     get:
       tags:
         - PlannedDeliveries
       summary: Get next scheduled delivery
-      description: Returns the next delivery scheduled for the customer.
       operationId: getNextDelivery
-      security:
-        - cookieAuth: []
-        - oauth2:
-            - read:self
       responses:
         '200':
-          description: Next delivery retrieved successfully
+          description: Next delivery
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Delivery'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: No deliveries scheduled
           content:
@@ -325,17 +342,11 @@ paths:
       tags:
         - PlannedDeliveries
       summary: Add item to a specific delivery
-      description: Adds an item to a specific planned delivery instance.
       operationId: addItemToPlannedDelivery
-      security:
-        - cookieAuth: []
-        - oauth2:
-            - write:self
       parameters:
         - name: id
           in: path
           required: true
-          description: The unique identifier of the planned delivery
           schema:
             type: string
             format: uuid
@@ -347,17 +358,11 @@ paths:
               $ref: '#/components/schemas/AddItemRequest'
       responses:
         '200':
-          description: Item added successfully
+          description: Item added
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ModifyDeliveryResponse'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Planned delivery not found
           content:
@@ -370,36 +375,23 @@ paths:
       tags:
         - PlannedDeliveries
       summary: Remove item from a specific delivery
-      description: Removes an item from a specific planned delivery instance.
       operationId: removeItemFromPlannedDelivery
-      security:
-        - cookieAuth: []
-        - oauth2:
-            - write:self
       parameters:
         - name: id
           in: path
           required: true
-          description: The unique identifier of the planned delivery
           schema:
             type: string
             format: uuid
         - name: itemId
           in: path
           required: true
-          description: The unique identifier of the item to remove
           schema:
             type: string
             format: uuid
       responses:
         '204':
-          description: Item removed successfully
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+          description: Item removed
         '404':
           description: Planned delivery or item not found
           content:
@@ -412,33 +404,21 @@ paths:
       tags:
         - PlannedDeliveries
       summary: Skip a planned delivery
-      description: Cancels and marks a specific planned delivery as skipped.
       operationId: cancelPlannedDelivery
-      security:
-        - cookieAuth: []
-        - oauth2:
-            - write:self
       parameters:
         - name: id
           in: path
           required: true
-          description: The unique identifier of the planned delivery to cancel
           schema:
             type: string
             format: uuid
       responses:
         '200':
-          description: Delivery cancelled successfully
+          description: Delivery skipped
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ModifyDeliveryResponse'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Planned delivery not found
           content:
@@ -446,22 +426,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  # ── Delivery Schedules ───────────────────────────────────────────────────────
+
   /DeliverySchedules/{id}/Items:
     post:
       tags:
         - DeliverySchedules
       summary: Add item to a delivery schedule
-      description: Adds an item to a recurring delivery schedule.
       operationId: addItemToDeliverySchedule
-      security:
-        - cookieAuth: []
-        - oauth2:
-            - write:self
       parameters:
         - name: id
           in: path
           required: true
-          description: The unique identifier of the delivery schedule
           schema:
             type: string
             format: uuid
@@ -473,17 +449,11 @@ paths:
               $ref: '#/components/schemas/AddItemRequest'
       responses:
         '200':
-          description: Item added successfully
+          description: Item added
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ModifyDeliveryResponse'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Delivery schedule not found
           content:
@@ -496,36 +466,23 @@ paths:
       tags:
         - DeliverySchedules
       summary: Remove item from a delivery schedule
-      description: Removes an item from a recurring delivery schedule so it won't be delivered on that schedule again.
       operationId: removeItemFromDeliverySchedule
-      security:
-        - cookieAuth: []
-        - oauth2:
-            - write:self
       parameters:
         - name: id
           in: path
           required: true
-          description: The unique identifier of the delivery schedule
           schema:
             type: string
             format: uuid
         - name: itemId
           in: path
           required: true
-          description: The unique identifier of the item to remove
           schema:
             type: string
             format: uuid
       responses:
         '204':
-          description: Item removed successfully
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+          description: Item removed
         '404':
           description: Delivery schedule or item not found
           content:
@@ -538,33 +495,21 @@ paths:
       tags:
         - DeliverySchedules
       summary: Cancel a delivery schedule
-      description: Cancels a recurring delivery schedule for the customer.
       operationId: cancelDeliverySchedule
-      security:
-        - cookieAuth: []
-        - oauth2:
-            - write:self
       parameters:
         - name: id
           in: path
           required: true
-          description: The unique identifier of the delivery schedule to cancel
           schema:
             type: string
             format: uuid
       responses:
         '200':
-          description: Delivery schedule cancelled successfully
+          description: Schedule cancelled
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ModifyDeliveryResponse'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Delivery schedule not found
           content:
@@ -573,25 +518,165 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 
 components:
-  securitySchemes:
-    cookieAuth:
-      type: apiKey
-      in: cookie
-      name: .AspNetCore.Cookies
-    oauth2:
-      type: oauth2
-      flows:
-        authorizationCode:
-          authorizationUrl: https://auth0.com/authorize
-          tokenUrl: https://auth0.com/oauth/token
-          scopes:
-            read:self: Read own data
-            write:self: Modify own data
-
   schemas:
+
+    # ── Onboarding schemas ─────────────────────────────────────────────────────
+
+    ValidateCodeRequest:
+      type: object
+      required:
+        - code
+      properties:
+        code:
+          type: string
+          description: 6-character invite code from the customer's welcome card
+          example: ABC123
+
+    ValidateCodeResponse:
+      type: object
+      required:
+        - supplierId
+        - businessName
+      properties:
+        supplierId:
+          type: string
+          format: uuid
+        businessName:
+          type: string
+          example: Adam Cartwright
+
+    ServiceAreaResponse:
+      type: object
+      required:
+        - inRange
+      properties:
+        inRange:
+          type: boolean
+        eta:
+          type: string
+          description: Human-readable delivery window shown on the confirmed-address card
+          example: Mon–Sat before 7am
+
+    CustomerAddress:
+      type: object
+      required:
+        - line1
+        - line2
+        - postcode
+      properties:
+        flat:
+          type: string
+          description: Flat or unit number (optional)
+          example: Flat 2
+        line1:
+          type: string
+          example: 14 Orchard Lane
+        line2:
+          type: string
+          example: Clifton
+        postcode:
+          type: string
+          example: BS8 2AB
+        notes:
+          type: string
+          description: Free-text delivery instructions (e.g. "Leave in the side porch")
+        latitude:
+          type: number
+          format: double
+          description: From postcodes.io — used for route optimisation
+        longitude:
+          type: number
+          format: double
+
+    CreateCustomerRequest:
+      type: object
+      required:
+        - supplierCode
+        - address
+      properties:
+        supplierCode:
+          type: string
+          description: Re-asserted so the request is self-contained and auditable
+          example: ABC123
+        address:
+          $ref: '#/components/schemas/CustomerAddress'
+
+    CreateCustomerResponse:
+      type: object
+      required:
+        - customerId
+      properties:
+        customerId:
+          type: string
+          format: uuid
+
+    BasketItem:
+      type: object
+      required:
+        - productId
+        - quantity
+      properties:
+        productId:
+          type: string
+          format: uuid
+        quantity:
+          type: integer
+          minimum: 1
+
+    CreateSubscriptionRequest:
+      type: object
+      required:
+        - deliveryDays
+        - defaultBasket
+      properties:
+        deliveryDays:
+          type: array
+          description: Days of the week to receive deliveries
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/DeliveryDayOfWeek'
+          example:
+            - Monday
+            - Wednesday
+            - Friday
+        defaultBasket:
+          type: array
+          description: Items delivered on all selected days (unless overridden)
+          items:
+            $ref: '#/components/schemas/BasketItem'
+        dayOverrides:
+          type: object
+          description: |
+            Per-day basket overrides. Keys are day names matching `deliveryDays`.
+            An override replaces the `defaultBasket` entirely for that day.
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/BasketItem'
+          example:
+            Monday:
+              - productId: 00000000-0000-0000-0000-000000000001
+                quantity: 4
+
+    CreateSubscriptionResponse:
+      type: object
+      required:
+        - scheduleIds
+      properties:
+        scheduleIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        firstDeliveryDate:
+          type: string
+          format: date-time
+          description: Scheduled date/time of the first delivery
+
+    # ── Shared / existing schemas ──────────────────────────────────────────────
+
     Price:
       type: object
-      description: Represents a monetary value with currency information
       required:
         - amount
         - precision
@@ -600,20 +685,16 @@ components:
         amount:
           type: number
           format: decimal
-          description: The monetary amount
           example: 2.50
         precision:
           type: integer
-          description: The number of decimal places for the currency
           example: 2
         symbol:
           type: string
-          description: The currency symbol for UI display
           example: "£"
 
     Item:
       type: object
-      description: Represents a product item
       required:
         - id
         - name
@@ -623,17 +704,14 @@ components:
         id:
           type: string
           format: uuid
-          description: Unique identifier for the item
         name:
           type: string
-          description: Display name of the item
-          example: "Semi-Skimmed Milk 1L"
+          example: Semi-Skimmed Milk 1L
         price:
           $ref: '#/components/schemas/Price'
         iconName:
           type: string
-          description: Icon identifier for UI display
-          example: "milk-bottle"
+          example: milk-bottle
 
     SupplierItem:
       allOf:
@@ -644,13 +722,11 @@ components:
           properties:
             maximumQuantity:
               type: integer
-              description: The maximum quantity the supplier can deliver
               minimum: 1
               example: 10
 
     DeliveryStatus:
       type: string
-      description: The current status of a delivery
       enum:
         - Pending
         - Packed
@@ -660,7 +736,6 @@ components:
 
     Delivery:
       type: object
-      description: Represents a scheduled delivery
       required:
         - id
         - items
@@ -671,26 +746,21 @@ components:
         id:
           type: string
           format: uuid
-          description: Unique identifier for the delivery
         items:
           type: array
-          description: List of items in the delivery
           items:
             $ref: '#/components/schemas/DeliveryItem'
         deliverySlotId:
           type: string
           format: uuid
-          description: Reference to the delivery slot
         scheduledTime:
           type: string
           format: date-time
-          description: Scheduled delivery date and time
         status:
           $ref: '#/components/schemas/DeliveryStatus'
 
     DeliveryItem:
       type: object
-      description: An item within a delivery with quantity
       required:
         - item
         - quantity
@@ -700,11 +770,20 @@ components:
         quantity:
           type: integer
           minimum: 1
-          description: Quantity of this item in the delivery
+
+    DeliveryDayOfWeek:
+      type: string
+      enum:
+        - Monday
+        - Tuesday
+        - Wednesday
+        - Thursday
+        - Friday
+        - Saturday
+        - Sunday
 
     DeliverySlot:
       type: object
-      description: A recurring delivery slot
       required:
         - id
         - dayOfWeek
@@ -714,33 +793,20 @@ components:
         id:
           type: string
           format: uuid
-          description: Unique identifier for the delivery slot
         dayOfWeek:
-          type: string
-          enum:
-            - Monday
-            - Tuesday
-            - Wednesday
-            - Thursday
-            - Friday
-            - Saturday
-            - Sunday
-          description: Day of the week for delivery
+          $ref: '#/components/schemas/DeliveryDayOfWeek'
         frequency:
           type: string
           enum:
             - Weekly
             - Fortnightly
             - Monthly
-          description: How often the delivery slot occurs
         cutoffTime:
           type: string
           format: time
-          description: Time by which orders must be placed (HH:mm format)
           example: "18:00"
         cutoffDaysBefore:
           type: integer
-          description: Number of days before delivery that orders must be placed
           minimum: 0
           example: 1
 
@@ -756,7 +822,6 @@ components:
 
     SupplierInfo:
       type: object
-      description: Basic contact information for a supplier
       required:
         - id
         - businessName
@@ -764,20 +829,15 @@ components:
         id:
           type: string
           format: uuid
-          description: Unique identifier for the supplier
         businessName:
           type: string
-          description: The business name of the supplier
           example: "Smith's Dairy Farm"
         phoneNumber:
           type: string
-          description: Contact phone number (optional)
           example: "+44 1234 567890"
         emailAddress:
           type: string
           format: email
-          description: Contact email address (optional)
-          example: "contact@smithsdairy.co.uk"
 
     SupplierItemsResponse:
       type: object
@@ -789,29 +849,8 @@ components:
           items:
             $ref: '#/components/schemas/SupplierItem'
 
-    SignupRequest:
-      type: object
-      required:
-        - supplierCode
-      properties:
-        supplierCode:
-          type: string
-          description: The unique code supplied by the supplier
-          example: "SMITH2024ABC"
-
-    SignupResponse:
-      type: object
-      required:
-        - redirectUrl
-      properties:
-        redirectUrl:
-          type: string
-          format: uri
-          description: Auth0 signup URL to redirect the user to
-
     AddItemRequest:
       type: object
-      description: Request to add an item to a delivery or schedule
       required:
         - productId
         - deliveryScheduleIds
@@ -820,30 +859,24 @@ components:
         productId:
           type: string
           format: uuid
-          description: The unique identifier of the product to add
         deliveryScheduleIds:
           type: array
-          description: Array of delivery schedule IDs to add the item to
           minItems: 1
           items:
             type: string
             format: uuid
         quantity:
           type: integer
-          description: The quantity of the item to add
           minimum: 1
-          example: 2
 
     ModifyDeliveryResponse:
       type: object
-      description: Response confirming a delivery modification
       required:
         - id
       properties:
         id:
           type: string
           format: uuid
-          description: The unique identifier of the modified delivery or schedule
 
     PlannedDeliveriesResponse:
       type: object
@@ -862,7 +895,5 @@ components:
       properties:
         message:
           type: string
-          description: Human-readable error message
         code:
           type: string
-          description: Machine-readable error code

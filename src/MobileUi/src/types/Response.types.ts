@@ -1,8 +1,22 @@
 import { Delivery, DeliverySlot, SupplierItem } from './Api.types';
 
-/** Response from the signup endpoint. */
-export interface SignupResponse {
-  redirectUrl: string;
+export interface ValidateCodeResponse {
+  supplierId: string;
+  businessName: string;
+}
+
+export interface ServiceAreaResponse {
+  inRange: boolean;
+  eta?: string;
+}
+
+export interface CreateCustomerResponse {
+  customerId: string;
+}
+
+export interface CreateSubscriptionResponse {
+  scheduleIds: string[];
+  firstDeliveryDate?: string;
 }
 
 /** Response confirming a delivery modification. */

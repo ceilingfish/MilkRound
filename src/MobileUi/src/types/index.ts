@@ -10,12 +10,22 @@ export type {
   DeliverySlot,
   SupplierInfo,
   UserRole,
+  CustomerAddress,
 } from './Api.types';
 
-export type { SignupRequest, AddItemRequest } from './Request.types';
+export type {
+  ValidateCodeRequest,
+  CreateCustomerRequest,
+  BasketItem,
+  CreateSubscriptionRequest,
+  AddItemRequest,
+} from './Request.types';
 
 export type {
-  SignupResponse,
+  ValidateCodeResponse,
+  ServiceAreaResponse,
+  CreateCustomerResponse,
+  CreateSubscriptionResponse,
   ModifyDeliveryResponse,
   DeliveryScheduleResponse,
   PlannedDeliveriesResponse,

@@ -1,5 +1,5 @@
-export { apiClient, setAuthToken, clearAuthToken } from './client';
-export { signup, isAuthorized } from './auth.api';
+export { apiClient } from './client';
+export { validateSupplierCode } from './auth.api';
 export {
   getSupplierInfo,
   getDeliverySchedule,
@@ -15,3 +15,8 @@ export {
   removeItemFromSchedule,
   cancelSchedule,
 } from './orders.api';
+export {
+  checkServiceArea,
+  createCustomer,
+  createSubscription,
+} from './customer.api';

@@ -1,16 +1,12 @@
 import { apiClient } from './client';
-import type { SignupRequest, SignupResponse } from '../types';
+import type { ValidateCodeRequest, ValidateCodeResponse } from '../types';
 
-export async function signup(request: SignupRequest): Promise<SignupResponse> {
-  const { data } = await apiClient.post<SignupResponse>('/Auth/Signup', request);
+export async function validateSupplierCode(
+  request: ValidateCodeRequest,
+): Promise<ValidateCodeResponse> {
+  const { data } = await apiClient.post<ValidateCodeResponse>(
+    '/Suppliers/ValidateCode',
+    request,
+  );
   return data;
-}
-
-export async function isAuthorized(): Promise<boolean> {
-  try {
-    const { data } = await apiClient.get<boolean>('/Auth/Authorized');
-    return data;
-  } catch {
-    return false;
-  }
 }

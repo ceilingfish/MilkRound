@@ -8,25 +8,25 @@ export const Spacing = {
 } as const;
 
 export const BorderRadius = {
-  sm: 8,
-  md: 12,
-  lg: 16,
+  sm: 12,
+  md: 16,
+  lg: 18,
   full: 9999,
 } as const;
 
 export const Shadows = {
   card: {
-    shadowColor: '#1A2E1A',
-    shadowOffset: { width: 0, height: 2 },
+    shadowColor: '#2C3A2A',
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 2,
   },
   elevated: {
-    shadowColor: '#1A2E1A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
+    shadowColor: '#2C3A2A',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 24,
     elevation: 4,
   },
 } as const;

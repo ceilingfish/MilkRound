@@ -1,30 +1,19 @@
 import { useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
-import { useAuthStore } from '../src/store';
-import { isAuthorized } from '../src/api';
+import { useOnboardingStore } from '../src/store';
 import { Colors } from '../src/theme';
 
 export default function IndexScreen() {
   const router = useRouter();
-  const { setAuthenticated, isAuthenticated, role, isNewCustomer } = useAuthStore();
+  const { customerId } = useOnboardingStore();
 
   useEffect(() => {
-    async function checkAuth() {
-      const authed = await isAuthorized();
-      setAuthenticated(authed);
-
-      if (!authed) {
-        router.replace('/(auth)/login');
-      } else if (isNewCustomer) {
-        router.replace('/(customer)/onboarding/select-days');
-      } else if (role === 'supplier') {
-        router.replace('/(supplier)/delivery-run');
-      } else {
-        router.replace('/(customer)/home');
-      }
+    if (customerId) {
+      router.replace('/(customer)/home');
+    } else {
+      router.replace('/(auth)/login');
     }
-    checkAuth();
   }, []);
 
   return (
