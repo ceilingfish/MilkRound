@@ -7,11 +7,14 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="Scalar.AspNetCore" />
+    <PackageReference Include="Npgsql" />
+    <PackageReference Include="Aspire.Npgsql" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Application\Application.csproj" />
     <ProjectReference Include="..\DataContracts\DataContracts.csproj" />
+    <ProjectReference Include="..\Data.PostgreSql\Data.PostgreSql.csproj" />
   </ItemGroup>
 
 </Project>

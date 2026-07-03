@@ -1,6 +1,7 @@
 -- Supplier Items table
 CREATE TABLE SupplierItems (
     Id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    PublicId UUID NOT NULL DEFAULT gen_random_uuid(),
     SupplierId BIGINT NOT NULL,
     ProductName VARCHAR(255) NOT NULL,
     PriceAmount DECIMAL(19, 4) NOT NULL,
@@ -13,6 +14,7 @@ CREATE TABLE SupplierItems (
     CreatedBy VARCHAR(255) NOT NULL,
     ModifiedAt TIMESTAMPTZ,
     ModifiedBy VARCHAR(255),
+    CONSTRAINT UQ_SupplierItems_PublicId UNIQUE (PublicId),
     CONSTRAINT FK_SupplierItems_Suppliers FOREIGN KEY (SupplierId)
         REFERENCES Suppliers(Id) ON DELETE NO ACTION
 );

@@ -32,8 +32,9 @@ type ScreenMode = 'search' | 'confirmed';
 
 export default function AddressScreen() {
   const router = useRouter();
-  const { supplierId, supplierName, supplierCode, setAddress, setCustomerId } = useOnboardingStore();
+  const { supplierId, supplierName, supplierCode, customerName, setCustomerName, setAddress, setCustomerId } = useOnboardingStore();
 
+  const [name, setName] = useState(customerName);
   const [query, setQuery] = useState('');
   const [picked, setPicked] = useState<typeof SAMPLE_ADDRESSES[0] | null>(null);
   const [mode, setMode] = useState<ScreenMode>('search');
@@ -92,7 +93,7 @@ export default function AddressScreen() {
   };
 
   const confirmAndContinue = async () => {
-    if (!picked || !picked.inRange) return;
+    if (!picked || !picked.inRange || !name.trim()) return;
     setLoading(true);
     try {
       const confirmedAddress: OnboardingAddress = {
@@ -104,9 +105,11 @@ export default function AddressScreen() {
         inRange: true,
         eta: picked.eta ?? undefined,
       };
+      setCustomerName(name.trim());
       setAddress(confirmedAddress);
 
       const res = await createCustomer({
+        name: name.trim(),
         supplierCode,
         address: {
           flat: draft.flat || undefined,
@@ -178,6 +181,8 @@ export default function AddressScreen() {
                 onContinue={confirmAndContinue}
                 loading={loading}
                 supplierFirst={supplierName?.split(' ')[0] ?? 'your milkman'}
+                name={name}
+                setName={setName}
               />
             )}
             {mode === 'confirmed' && picked && !picked.inRange && (
@@ -309,13 +314,24 @@ interface ConfirmedCardProps {
   onContinue: () => void;
   loading: boolean;
   supplierFirst: string;
+  name: string;
+  setName: (v: string) => void;
 }
 
-function ConfirmedCard({ address, draft, setDraft, editing, setEditing, onReset, onContinue, loading, supplierFirst }: ConfirmedCardProps) {
+function ConfirmedCard({ address, draft, setDraft, editing, setEditing, onReset, onContinue, loading, supplierFirst, name, setName }: ConfirmedCardProps) {
   return (
     <View style={styles.confirmedCard}>
       <MapSketch />
       <View style={styles.confirmedBody}>
+        <FormField
+          label="Your name"
+          value={name}
+          onChange={setName}
+          placeholder="e.g. Jane Wilson"
+          autoCapitalize="words"
+        />
+        <View style={{ height: 12 }} />
+
         {/* Badge row */}
         <View style={styles.confirmedBadgeRow}>
           <View style={styles.inRangeBadge}>
@@ -369,8 +385,8 @@ function ConfirmedCard({ address, draft, setDraft, editing, setEditing, onReset,
 
             <Pressable
               onPress={onContinue}
-              disabled={loading}
-              style={[styles.continueBtn, loading && styles.continueBtnDisabled]}
+              disabled={loading || !name.trim()}
+              style={[styles.continueBtn, (loading || !name.trim()) && styles.continueBtnDisabled]}
             >
               {loading ? (
                 <ActivityIndicator color={Colors.primaryInk} />

@@ -5,6 +5,7 @@ export interface ValidateCodeRequest {
 }
 
 export interface CreateCustomerRequest {
+  name: string;
   supplierCode: string;
   address: CustomerAddress;
 }

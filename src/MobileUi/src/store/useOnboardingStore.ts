@@ -22,6 +22,7 @@ interface OnboardingState {
   supplierName: string | null;
 
   // Step 2 — address
+  customerName: string;
   address: OnboardingAddress | null;
   customerId: string | null;
 
@@ -35,6 +36,7 @@ interface OnboardingState {
 
   // Actions
   setSupplier: (code: string, id: string, name: string) => void;
+  setCustomerName: (name: string) => void;
   setAddress: (address: OnboardingAddress) => void;
   setCustomerId: (id: string) => void;
   toggleDay: (day: string) => void;
@@ -48,6 +50,7 @@ const initialState = {
   supplierCode: '',
   supplierId: null,
   supplierName: null,
+  customerName: '',
   address: null,
   customerId: null,
   selectedDays: [],
@@ -61,6 +64,8 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
 
   setSupplier: (code, id, name) =>
     set({ supplierCode: code, supplierId: id, supplierName: name }),
+
+  setCustomerName: (name) => set({ customerName: name }),
 
   setAddress: (address) => set({ address }),
 

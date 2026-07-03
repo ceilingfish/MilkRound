@@ -35,14 +35,31 @@ paths:
   # ── Onboarding ──────────────────────────────────────────────────────────────
 
   /Suppliers/ValidateCode:
-    post:
+    # NOTE ON THE `query` OPERATION: this endpoint uses the HTTP QUERY method —
+    # a body-bearing, safe, idempotent method (see the IETF draft
+    # draft-ietf-httpbis-safe-method-w-body). OpenAPI 3.0.3's Path Item Object
+    # only formally enumerates get/put/post/delete/options/head/patch/trace as
+    # operation keys, so tooling built strictly against the 3.0.3 schema will
+    # not recognise a `query:` key here and may ignore or reject it. We still
+    # express it as `query:` below because that is the most accurate
+    # representation of the real wire contract, and treat this as a documented
+    # judgment call pending either an OpenAPI version with native support or a
+    # vendor-extension convention. Do NOT treat the presence of `post:` (if any
+    # tooling forces a fallback) as the source of truth — `query` is the actual
+    # method the API and client use.
+    query:
       tags:
         - Onboarding
       summary: Validate a supplier invite code
       description: |
         Validates the 6-character code from the customer's welcome card.
-        Returns basic supplier information so the app can personalise the
-        onboarding journey. No customer record is created at this stage.
+        Returns basic identifying information for the Supplier business
+        record (not an individual delivery round/rota — a Supplier may run
+        multiple rota areas) so the app can personalise the onboarding
+        journey. No customer record is created at this stage.
+
+        Uses the HTTP QUERY method — see the note above the `query:` key on
+        this path item for why this doesn't appear as `post:` or `get:`.
       operationId: validateSupplierCode
       requestBody:
         required: true
@@ -140,7 +157,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '409':
-          description: A customer with this address already exists for this supplier
+          description: |
+            Conflict. Two distinct conflict cases are possible here, both
+            using this same status code for consistency, distinguished by
+            the `code` field on `ErrorResponse`:
+              - `DUPLICATE_ADDRESS` — a customer with this address already
+                exists for this supplier.
+              - `OUT_OF_SERVICE_AREA` — the address's postcode does not fall
+                within any of the supplier's delivery rota areas. Clients
+                should normally catch this earlier via
+                `GET /Suppliers/{id}/ServiceArea`, but the server re-checks
+                on create since the two calls are not atomic.
           content:
             application/json:
               schema:
@@ -541,6 +568,10 @@ components:
         supplierId:
           type: string
           format: uuid
+          description: |
+            Identifies the Supplier record (the business), not an individual
+            delivery round/rota. A single supplier may have multiple rota
+            areas; this id is scoped to the business as a whole.
         businessName:
           type: string
           example: Adam Cartwright
@@ -591,9 +622,14 @@ components:
     CreateCustomerRequest:
       type: object
       required:
+        - name
         - supplierCode
         - address
       properties:
+        name:
+          type: string
+          description: The customer's name
+          example: Jane Wilson
         supplierCode:
           type: string
           description: Re-asserted so the request is self-contained and auditable
@@ -897,3 +933,7 @@ components:
           type: string
         code:
           type: string
+          description: |
+            Machine-readable error code. Distinguishes between conflict kinds
+            that share the same HTTP status, e.g. on `POST /Customers`:
+            `DUPLICATE_ADDRESS` vs `OUT_OF_SERVICE_AREA` (both 409).

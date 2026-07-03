@@ -36,7 +36,7 @@ The solution file (and all these assemblies) should be in the `src` folder. The 
 - Api.Service - This is the entry point executable that should run the asp.net core API. The docker file should be in this project, and the ASP.Net Controllers. The controllers should call command and query handler interfaces defined in the Application library. It should use the domain objects from the DataContracts library
 - Api.Client - This should contain a strongly type .net client that is auto-generated from the OpenAPI spec. It should generate this using the Refit library
 - Adapters - These are the abstractions that bridge between the business logic in Application and the underlying implementation. e.g. cosmos DB. If you need to create a library for this please use the assembly name `Data.XXX` where XXX is a representative name of an abstraction.
-- Data.PostgresSQL - This should be a sqlproj file that contains all of the tables, stored procedures and indices. It should also contain a database client that implements an interface for data access defined in Abstractions
+- Data.PostgreSql - A C# class library containing repository implementations for the data-access interfaces defined in Abstractions. Each repository method is a thin wrapper that invokes a single Postgres stored procedure or function via Dapper — it should not build or issue inline SQL. The actual tables, stored procedures, functions and indices are defined declaratively under `src/Schema` (see `src/Schema/Procedures/`) and applied to a real database via Atlas (`mise run db:migrate`), not via a `.sqlproj`.
 - Schema - Contains the schema to create the postgres database
 
 ## Abstractions
@@ -44,6 +44,10 @@ The solution file (and all these assemblies) should be in the `src` folder. The 
 ### Data Reader & Writer
 
 The interface for persistence should separate out writers (which should be used to persist data written by commands) and readers which should be used to read data requested by queries
+
+### Stored Procedures
+
+All database reads and writes must go through a named Postgres stored procedure or function defined in `src/Schema/Procedures/` — application code must never issue inline/ad-hoc SQL strings against the database. Repository implementations in `Data.PostgreSql` are thin wrappers that invoke a single procedure/function per method via Dapper. This keeps query plans and business rules (e.g. dedup checks) auditable and testable independently of the API layer.
 
 ### Tests
 
@@ -393,6 +397,8 @@ You should use mise for two things:
 You can also use it when you want to define build tasks, in a similar manner to a NPM package.json task. You can define tasks in mise.toml using [tasks."task:name"]. You can reference environmental variables, by putting this these in mise.ENV.toml.
 
 You can use those in using $VARIABLE syntax. If you define an environment variable, you should define a default in mise.toml.
+
+There is a `dev:run` mise task (`dotnet run --project src/MilkRound.AppHost/MilkRound.AppHost.csproj`) that uses .NET Aspire to spin up Postgres and the API together for local development. Prefer `mise run dev:run` over starting dependencies individually.
 
 # Hard Rules
 

@@ -27,6 +27,10 @@ depends = ["api:build"]
 description = "Apply database schema migrations"
 run = "atlas schema apply --to src/Schema --url $DATABASE_URL --dev-url $DATABASE_DEV_URL"
 
+[tasks."dev:run"]
+description = "Run the MilkRound Aspire AppHost (API Service + Postgres)"
+run = "dotnet run --project src/MilkRound.AppHost/MilkRound.AppHost.csproj"
+
 [tasks."mobile:start"]
 description = "Run the Mobile UI (Expo dev server)"
 dir = "src/MobileUi"
