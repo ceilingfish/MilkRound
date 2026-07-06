@@ -29,7 +29,7 @@ run = "atlas schema apply --to src/Schema --url $DATABASE_URL --dev-url $DATABAS
 
 [tasks."dev:run"]
 description = "Run the MilkRound Aspire AppHost (API Service + Postgres)"
-run = "dotnet run --project src/MilkRound.AppHost/MilkRound.AppHost.csproj"
+run = "dotnet run --project src/AppHost/AppHost.csproj"
 
 [tasks."mobile:start"]
 description = "Run the Mobile UI (Expo dev server)"
