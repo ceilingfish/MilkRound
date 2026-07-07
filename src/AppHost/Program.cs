@@ -33,8 +33,12 @@ var migrations = builder.AddExecutable(
         "--auto-approve")
     .WaitFor(milkRoundDb);
 
+// Pin the API to predictable host ports (rather than the random ports in launchSettings.json)
+// so tooling, the mobile UI, and manual testing always find it at the same address.
 builder.AddProject<Projects.Api_Service>("api-service")
     .WithReference(milkRoundDb)
-    .WaitForCompletion(migrations);
+    .WaitForCompletion(migrations)
+    .WithEndpoint("http", e => e.Port = 5080)
+    .WithEndpoint("https", e => e.Port = 5443);
 
 builder.Build().Run();

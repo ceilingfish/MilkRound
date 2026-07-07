@@ -66,7 +66,7 @@ if (app.Environment.IsDevelopment())
 {
     app.UseCors("DevAllowAll");
     app.MapOpenApi();
-    app.MapScalarApiReference("/");
+    app.MapScalarApiReference(options => options.EndpointPathPrefix = "/");
 }
 
 app.UseHttpsRedirection();
